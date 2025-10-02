@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+    <!-- Define o tipo de documento como HTML5 -->
+    <html lang="pt-BR">
+    <!-- Define o idioma da página como português brasileiro -->
+
+    <head>
+        <meta charset="UTF-8">
+        <!-- Define a codificação de caracteres como UTF-8 (aceita acentos e caracteres especiais) -->
+
+        <title>Lista de Tarefas</title>
+        <!-- Título da página exibido na aba do navegador -->
+
+        <!--Manifest do PWA-->
+        <link rel = "manifest" href="manisfest.json">
+        <meta name="theme-color" content="#000000">
+
+        <style>
+            /* Estilo geral da página */
+            body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(50, 50, 255);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            }
+
+            /* Container central que envolve a lista */
+            .container {
+            background: #3675e49a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            width: 70vw;
+            }
+
+            /* Estilo do título */
+
+            h1{
+                text-align: center;
+                color: white;
+                text-shadow: 2px 2px 2px black;
+                margin-bottom: 15px;
+                font-size: 70px;
+            }
+            h2 {
+                text-align: center;
+                font-size: 50px;
+                color: white;
+                text-shadow: 2px 2px 2px black;
+                margin-bottom: 15px;
+            }
+
+            /* Campo de input onde o usuário digita a tarefa */
+            input {
+            width: 70%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 30px;
+            }
+
+            /* Botão de adicionar tarefa */
+            button {
+            padding: 8px 12px;
+            border: none;
+            background: #063f94;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 30px;
+            }
+
+            /* Lista de tarefas sem marcadores */
+            ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+            }
+
+            /* Estilo de cada item da lista */
+            li {
+            background: #f1f1f1;
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            }
+
+            /* Estilo quando a tarefa está marcada como concluída */
+            li.completed {
+            text-decoration: line-through;
+            color: gray;
+            }
+
+            /* Botão de deletar uma tarefa */
+            .delete {
+            background: red;
+            border: none;
+            color: white;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            }
+            .date-time {
+            font-size: 18px;
+            color: #444;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1> DreamBox </h1>
+        <div class="container">
+            <!-- Título principal da aplicação -->
+            <h2>📌 Lista de Tarefas</h2>
+
+            <!-- Campo de texto para digitar a nova tarefa -->
+            <input type="text" id="taskInput" placeholder="Digite uma tarefa">
+
+            <!-- Campo de data -->
+            <input type="date" id="dateInput">
+
+            <!--Input para horário-->
+            <input type="time" id="timeInput">
+
+            <!-- Botão que chama a função addTask() ao ser clicado -->
+            <button onclick="addTask()">Adicionar</button>
+
+            <!-- Lista onde as tarefas serão adicionadas dinamicamente -->
+            <ul id="taskList"></ul>
+        </div>
+
+        <script>
+            const taskInput = document.getElementById("taskInput");
+            const taskList = document.getElementById("taskList");
+            const timeInput = document.getElementById("timeInput");
+            const dateInput = document.getElementById("dateInput");
+
+            // Carregar tarefas ao abrir a página
+            window.onload = loadTasks;
+
+            // Função para adicionar uma tarefa
+            function addTask() {
+            const taskText = taskInput.value.trim();
+            const taskTime = timeInput.value;
+            const taskDate = dateInput.value;
+
+            if (taskText === "") {
+            alert("Digite uma tarefa!");
+            return;
+            }
+
+            // Validação simples do horário
+           if (taskTime) {
+            const [h, m] = taskTime.split(":").map(Number);
+            if (h < 0 || h > 23 || m < 0 || m > 59) {
+               alert("Horário inválido! Use o formato HH:MM.");
+                  return;
+                }
+            }
+
+            // Cria item da lista
+            const li = document.createElement("li");
+
+            li.innerHTML = `
+            <span onclick="toggleComplete(this)">
+                ${taskText}
+                ${taskDate ? ` - <strong class="date-time">📅 ${taskDate}</strong>` : ""}
+                ${taskTime ? ` - <strong class="time">🕒 ${taskTime}</strong>` : ""}
+                </span>
+                ${taskTime || taskDate ? `<button class="removeTime" onclick="removeDateTime(this)">🗑️</button>` : ""}
+                <button class="delete" onclick="deleteTask(this)">X</button>
+            `;
+
+            taskList.appendChild(li);
+            saveTasks();
+
+            // Limpa campos
+            taskInput.value = "";
+            timeInput.value = "";
+            dateInput.value = "";
+            }
+
+            // Marcar / desmarcar como concluída
+            function toggleComplete(element) {
+                element.parentElement.classList.toggle("completed");
+                    saveTasks();
+            }
+
+            // Deletar tarefa
+            function deleteTask(button) {
+                    button.parentElement.remove();
+                saveTasks();
+            }
+
+            // Remover data e hora da tarefa
+                function removeDateTime(button) {
+                    const li = button.parentElement;
+                    const dateEl = li.querySelector(".date-time");
+                    const timeEl = li.querySelector(".time");
+                    if (dateEl) dateEl.remove();
+                    if (timeEl) timeEl.remove();
+                    button.remove();
+                    saveTasks();
+            }
+
+            // Salvar tarefas no localStorage
+            function saveTasks() {
+                    localStorage.setItem("tasks", taskList.innerHTML);
+                }
+
+            // Carregar tarefas do localStorage
+            function loadTasks() {
+                const data = localStorage.getItem("tasks");
+                if (data) {
+                    taskList.innerHTML = data;
+                }
+            }
+
+            // Registrar o Service Worker
+            if ("serviceWorker" in navigator) {
+                navigator.serviceWorker.register("Service-worker.js")
+                .then(() => console.log("Service Worker registrado"))
+                .catch(err => console.log("Erro no SW:", err));
+            }
+        </script>
+    </body>
+</html>
